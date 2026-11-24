@@ -337,7 +337,9 @@
   @keyframes aboutIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
 
   /* desktop: Framer re-mounts the tab content on every switch, so the animation replays */
-  .framer-k8g0wz [data-framer-name="Nav contents"] { animation: aboutIn .45s cubic-bezier(.2,.7,.2,1) both; }
+  /* opacity only: any movement here reads as the picture jumping */
+  @keyframes aboutFade { from { opacity: 0; } to { opacity: 1; } }
+  .framer-k8g0wz [data-framer-name="Nav contents"] { animation: aboutFade .4s ease both; }
   .framer-k8g0wz [data-framer-name="Tabs"] * { transition: background-color .3s ease, color .3s ease; }
 
   .about-switch { display: none; }
@@ -609,6 +611,20 @@
     place();
     pill();
   }
+  // desktop tabs: Framer unmounts the old content before mounting the new one, so the block
+  // collapses for a moment and everything below jumps. Hold its height until the new content is in.
+  document.addEventListener("pointerdown", function (e) {
+    var tab = e.target.closest && e.target.closest('.framer-k8g0wz [data-framer-name="Tabs"] button');
+    if (!tab) return;
+    var nc = document.querySelector('.framer-k8g0wz [data-framer-name="Nav contents"]');
+    var box = nc && nc.parentElement;
+    if (!box) return;
+    box.style.minHeight = box.offsetHeight + "px";
+    clearTimeout(box._hold);
+    box._hold = setTimeout(function () { box.style.minHeight = ""; }, 1500);
+  }, true);
+  // fetch both pictures up front, so switching never waits for a download
+  ["NndyJxzRHGKIruxBgnAVcHl4.png", "Ttrb9IOrY9I9cv9BdV8be7p7T3k.png"].forEach(function (f) { var i = new Image(); i.src = "./assets/fu/images/" + f; });
   window.addEventListener("resize", pill);
   if (document.fonts) document.fonts.ready.then(pill);
   // insert only after React hydration (or after a timeout when opened from disk), then keep it in place
