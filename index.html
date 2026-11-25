@@ -428,25 +428,17 @@
 
 </style>
 <style>
-  @keyframes aboutIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
 
-  /* desktop: Framer re-mounts the tab content on every switch, so the animation replays */
-  /* opacity only: any movement here reads as the picture jumping */
-  @keyframes aboutFade { from { opacity: 0; } to { opacity: 1; } }
-  .framer-k8g0wz [data-framer-name="Nav contents"] { animation: aboutFade .4s ease both; }
-  .framer-k8g0wz [data-framer-name="Tabs"] * { transition: background-color .25s ease, color .25s ease; }
-  /* tabs look: dark pill with white text on the active one, plain text on the rest */
-  .framer-k8g0wz [data-framer-name="Tabs"] button[data-framer-name="Active Tab"] { background-color: #111 !important; }
-  .framer-k8g0wz [data-framer-name="Tabs"] button[data-framer-name="Active Tab"] p { color: #fff !important; }
-  .framer-k8g0wz [data-framer-name="Tabs"] button[data-framer-name="In active"] p { color: #111 !important; }
-  .framer-k8g0wz [data-framer-name="Tabs"] button[data-framer-name="In active"]:hover p { color: #666 !important; }
+  /* plain instant switch, no animation: dark pill with white text on the active one, plain text on the rest */
+  .framer-k8g0wz [data-framer-name="Tabs"] button.framer-v-boi0e2 { background-color: #111 !important; }
+  .framer-k8g0wz [data-framer-name="Tabs"] button.framer-v-boi0e2 p { color: #fff !important; }
+  .framer-k8g0wz [data-framer-name="Tabs"] button.framer-v-1xwakht p { color: #111 !important; }
+  .framer-k8g0wz [data-framer-name="Tabs"] button.framer-v-1xwakht:hover p { color: #666 !important; }
 
   .about-switch { display: none; }
   @media (max-width: 1279.98px) {
     html:not([data-about="1"]) .framer-72rtr7 > .framer-1ukg0l0,
     html[data-about="1"] .framer-72rtr7 > .framer-1tr1cyq { display: none !important; }
-    /* sections replay this every time they go from display:none to visible */
-    .framer-72rtr7 > .framer-1tr1cyq, .framer-72rtr7 > .framer-1ukg0l0 { animation: aboutIn .45s cubic-bezier(.2,.7,.2,1) both; }
     /* tighter gap between the switch and the heading */
     .framer-72rtr7 > .framer-1tr1cyq, .framer-72rtr7 > .framer-1ukg0l0 { padding-top: 0 !important; margin-top: -12px; }
 
@@ -471,7 +463,6 @@
       transform: translateX(var(--x, 0));
       border-radius: 999px;
       background: #111;
-      transition: transform .35s cubic-bezier(.3,.7,.2,1), width .35s cubic-bezier(.3,.7,.2,1);
     }
     .about-switch button[aria-pressed="true"] { color: #fff; }
     .about-switch button {
@@ -483,7 +474,6 @@
       font: inherit;
       font-size: 15px;
       color: #111;
-      transition: color .25s ease;
       cursor: pointer;
       white-space: nowrap;
       -webkit-tap-highlight-color: transparent;
