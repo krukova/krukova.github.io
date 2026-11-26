@@ -429,11 +429,30 @@
 </style>
 <style>
 
-  /* plain instant switch, no animation: dark pill with white text on the active one, plain text on the rest */
-  .framer-k8g0wz [data-framer-name="Tabs"] button.framer-v-boi0e2 { background-color: #111 !important; }
-  .framer-k8g0wz [data-framer-name="Tabs"] button.framer-v-boi0e2 p { color: #fff !important; }
-  .framer-k8g0wz [data-framer-name="Tabs"] button.framer-v-1xwakht p { color: #111 !important; }
+  /* Tabs like alfabank.ru: the buttons never change, one dark pill slides under the active one (0.2s linear).
+     Framer's own variant animation (both buttons fading through white) is switched off by forcing them transparent.
+     Variants: boi0e2 = active, 1rmgc5q = becoming active (mid-transition), 1xwakht = inactive. */
+  .framer-k8g0wz [data-framer-name="Tabs"] { position: relative; }
+  .framer-k8g0wz [data-framer-name="Tabs"]::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: var(--y, 0);
+    width: var(--w, 0);
+    height: var(--h, 0);
+    transform: translateX(var(--x, 0));
+    border-radius: 999px;
+    background: #212124;
+    pointer-events: none;
+  }
+  .framer-k8g0wz [data-framer-name="Tabs"].tabs-ready::before { transition: transform .2s linear, width .2s linear; }
+  .framer-k8g0wz [data-framer-name="Tabs"] > * { position: relative; z-index: 1; }
+  .framer-k8g0wz [data-framer-name="Tabs"] button { background-color: transparent !important; }
+  .framer-k8g0wz [data-framer-name="Tabs"] button p { color: #111 !important; transition: color .2s linear; }
   .framer-k8g0wz [data-framer-name="Tabs"] button.framer-v-1xwakht:hover p { color: #666 !important; }
+  .framer-k8g0wz [data-framer-name="Tabs"] button.tab-on p,
+  .framer-k8g0wz [data-framer-name="Tabs"]:not(.tabs-pending) button.framer-v-boi0e2 p,
+  .framer-k8g0wz [data-framer-name="Tabs"]:not(.tabs-pending) button.framer-v-1rmgc5q p { color: #fff !important; }
 
   .about-switch { display: none; }
   @media (max-width: 1279.98px) {
@@ -462,8 +481,9 @@
       width: var(--w, 0);
       transform: translateX(var(--x, 0));
       border-radius: 999px;
-      background: #111;
+      background: #212124;
     }
+    .about-switch.ready::before { transition: transform .2s linear, width .2s linear; }
     .about-switch button[aria-pressed="true"] { color: #fff; }
     .about-switch button {
       position: relative;
@@ -474,6 +494,7 @@
       font: inherit;
       font-size: 15px;
       color: #111;
+      transition: color .2s linear;
       cursor: pointer;
       white-space: nowrap;
       -webkit-tap-highlight-color: transparent;
@@ -796,7 +817,37 @@
     if (!b || !b.offsetWidth) return;
     sw.style.setProperty("--x", b.offsetLeft + "px");
     sw.style.setProperty("--w", b.offsetWidth + "px");
+    // first placement without sliding in from the left edge
+    if (!sw.classList.contains("ready")) requestAnimationFrame(function () { sw.classList.add("ready"); });
   }
+
+  // desktop (Framer) tabs: move our pill under the active button
+  var TABS = '.framer-k8g0wz [data-framer-name="Tabs"]';
+  var pending = null; // button clicked, until Framer catches up
+  function tabsPill() {
+    var t = document.querySelector(TABS);
+    if (!t) return;
+    var btns = [].slice.call(t.querySelectorAll("button"));
+    if (pending && !t.contains(pending)) pending = null;
+    var on = pending || btns.filter(function (b) { return /framer-v-(boi0e2|1rmgc5q)/.test(b.className); })[0];
+    if (!on || !on.offsetWidth) return;
+    var tr = t.getBoundingClientRect(), br = on.getBoundingClientRect();
+    t.style.setProperty("--x", (br.left - tr.left) + "px");
+    t.style.setProperty("--y", (br.top - tr.top) + "px");
+    t.style.setProperty("--w", br.width + "px");
+    t.style.setProperty("--h", br.height + "px");
+    t.classList.toggle("tabs-pending", !!pending);
+    btns.forEach(function (b) { b.classList.toggle("tab-on", b === pending); });
+    if (!t.classList.contains("tabs-ready")) requestAnimationFrame(function () { t.classList.add("tabs-ready"); });
+  }
+  document.addEventListener("pointerdown", function (e) {
+    var b = e.target.closest && e.target.closest(TABS + " button");
+    if (!b) return;
+    pending = b;
+    tabsPill();
+    clearTimeout(tabsPill._t);
+    tabsPill._t = setTimeout(function () { pending = null; tabsPill(); }, 700);
+  }, true);
   function place() {
     // one switch above both sections, so it stays put while the content changes
     var first = document.querySelector(".framer-72rtr7 > ." + secs[0]);
@@ -822,8 +873,8 @@
   }, true);
   // fetch both pictures up front, so switching never waits for a download
   ["NndyJxzRHGKIruxBgnAVcHl4.png", "Ttrb9IOrY9I9cv9BdV8be7p7T3k.png"].forEach(function (f) { var i = new Image(); i.src = "./assets/fu/images/" + f; });
-  window.addEventListener("resize", pill);
-  if (document.fonts) document.fonts.ready.then(pill);
+  window.addEventListener("resize", function () { pill(); tabsPill(); });
+  if (document.fonts) document.fonts.ready.then(function () { pill(); tabsPill(); });
   // insert only after React hydration (or after a timeout when opened from disk), then keep it in place
   var main = document.getElementById("main"), tries = 0;
   (function wait() {
@@ -832,8 +883,9 @@
   })();
   function start() {
     render();
-    new MutationObserver(function () { if (!sw.isConnected || sw.nextElementSibling !== document.querySelector(".framer-72rtr7 > ." + secs[0])) render(); else pill(); })
-      .observe(document.body, { childList: true, subtree: true });
+    tabsPill();
+    new MutationObserver(function () { if (!sw.isConnected || sw.nextElementSibling !== document.querySelector(".framer-72rtr7 > ." + secs[0])) render(); else pill(); tabsPill(); })
+      .observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["class"] });
   }
 })();
 </script></body>
