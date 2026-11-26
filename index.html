@@ -433,6 +433,9 @@
      Framer's own variant animation (both buttons fading through white) is switched off by forcing them transparent.
      Variants: boi0e2 = active, 1rmgc5q = becoming active (mid-transition), 1xwakht = inactive. */
   .framer-k8g0wz [data-framer-name="Tabs"] { position: relative; }
+  /* while the content is swapped, its box keeps its height (see the pointerdown hold below);
+     it centres its children, so the tabs dropped to the middle and Framer animated them back up. Pin them to the top. */
+  .framer-k8g0wz [data-framer-name="Tabs + Nav contents"] { justify-content: flex-start !important; }
   .framer-k8g0wz [data-framer-name="Tabs"]::before {
     content: "";
     position: absolute;
